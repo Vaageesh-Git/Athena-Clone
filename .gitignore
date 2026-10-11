@@ -1,0 +1,23 @@
+# Dependency directory
+node_modules/
+
+# Production build and Forge outputs
+dist/
+dist-electron/
+out/
+
+# Proctoring output folders
+app/user-camera-snap/
+app/user-screen-snap/
+user-camera-snap/
+user-screen-snap/
+snapshots/
+
+# Environment files
+.env
+.env.local
+
+# OS files
+.DS_Store
+Thumbs.db
+*.log
