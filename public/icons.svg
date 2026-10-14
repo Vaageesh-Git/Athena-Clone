@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none">
+  <symbol id="icon-camera" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M15 8l4.553-2.276A1 1 0 0 1 21 6.618v10.764a1 1 0 0 1-1.447.894L15 16" />
+    <rect x="3" y="6" width="12" height="12" rx="2" />
+  </symbol>
+  <symbol id="icon-screen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <rect x="2.5" y="4.5" width="19" height="13" rx="1.5" />
+    <path d="M8 21h8M12 17.5V21" />
+  </symbol>
+  <symbol id="icon-fullscreen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+    <path d="M9 3H3v6M15 3h6v6M21 15v6h-6M3 15v6h6" />
+  </symbol>
+</svg>
