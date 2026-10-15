@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import './App.css';
 
 function App() {
@@ -6,7 +6,23 @@ function App() {
   const [screenShareEnabled, setScreenShareEnabled] = useState(false);
   const [fullScreen, setFullScreen] = useState(false);
 
+  const cameraVideoRef = useRef(null);
+
   const allChecksReady = cameraEnabled && screenShareEnabled && fullScreen;
+
+  async function getCameraAccess() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: 1280, height: 720 }
+      });
+      if (cameraVideoRef.current) {
+        cameraVideoRef.current.srcObject = stream;
+      }
+      setCameraEnabled(true);
+    } catch (err) {
+      alert("Unable to access camera. Please allow webcam permissions and try again.");
+    }
+  }
 
   return (
     <div className="page">
@@ -28,9 +44,22 @@ function App() {
             <h3>Camera</h3>
             <p>Used to verify candidate identity during the exam.</p>
             <div className="check-action">
-              <button className="btn btn-primary" onClick={() => setCameraEnabled(true)}>
-                Allow camera access
-              </button>
+              {cameraEnabled ? (
+                <span className="check-status">
+                  <CheckmarkIcon /> Camera connected
+                </span>
+              ) : (
+                <button className="btn btn-primary" onClick={getCameraAccess}>
+                  Allow camera access
+                </button>
+              )}
+              <video
+                ref={cameraVideoRef}
+                autoPlay
+                playsInline
+                muted
+                className={`preview ${cameraEnabled ? '' : 'is-hidden'}`}
+              />
             </div>
           </div>
         </div>
@@ -83,6 +112,14 @@ function App() {
         </button>
       </div>
     </div>
+  );
+}
+
+function CheckmarkIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round">
+      <polyline points="20 6 9 17 4 12" />
+    </svg>
   );
 }
 
