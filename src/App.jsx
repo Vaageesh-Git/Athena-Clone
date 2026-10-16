@@ -7,6 +7,7 @@ function App() {
   const [fullScreen, setFullScreen] = useState(false);
 
   const cameraVideoRef = useRef(null);
+  const screenVideoRef = useRef(null);
 
   const allChecksReady = cameraEnabled && screenShareEnabled && fullScreen;
 
@@ -21,6 +22,29 @@ function App() {
       setCameraEnabled(true);
     } catch (err) {
       alert("Unable to access camera. Please allow webcam permissions and try again.");
+    }
+  }
+
+  async function getScreenShareAccess() {
+    try {
+      const stream = await navigator.mediaDevices.getDisplayMedia({ video: true });
+      if (screenVideoRef.current) {
+        screenVideoRef.current.srcObject = stream;
+      }
+      setScreenShareEnabled(true);
+    } catch (err) {
+      alert("Unable to share screen. Please allow display capture and try again.");
+    }
+  }
+
+  async function enableFullScreen() {
+    try {
+      if (!document.fullscreenElement) {
+        await document.documentElement.requestFullscreen();
+      }
+      setFullScreen(true);
+    } catch (err) {
+      alert("Cannot switch to full screen mode.");
     }
   }
 
@@ -78,9 +102,22 @@ function App() {
             <h3>Screen sharing</h3>
             <p>Lets the proctor monitor desktop activity throughout the session.</p>
             <div className="check-action">
-              <button className="btn btn-primary" onClick={() => setScreenShareEnabled(true)}>
-                Share your screen
-              </button>
+              {screenShareEnabled ? (
+                <span className="check-status">
+                  <CheckmarkIcon /> Screen sharing active
+                </span>
+              ) : (
+                <button className="btn btn-primary" onClick={getScreenShareAccess}>
+                  Share your screen
+                </button>
+              )}
+              <video
+                ref={screenVideoRef}
+                autoPlay
+                playsInline
+                muted
+                className={`preview ${screenShareEnabled ? '' : 'is-hidden'}`}
+              />
             </div>
           </div>
         </div>
@@ -98,9 +135,15 @@ function App() {
             <h3>Full screen</h3>
             <p>Locks the browser into full screen mode during the exam.</p>
             <div className="check-action">
-              <button className="btn btn-primary" onClick={() => setFullScreen(true)}>
-                Switch to full screen
-              </button>
+              {fullScreen ? (
+                <span className="check-status">
+                  <CheckmarkIcon /> Full screen enabled
+                </span>
+              ) : (
+                <button className="btn btn-primary" onClick={enableFullScreen}>
+                  Switch to full screen
+                </button>
+              )}
             </div>
           </div>
         </div>

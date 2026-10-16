@@ -1,5 +1,5 @@
 // app.js
-import { app, BrowserWindow, ipcMain, dialog } from "electron";
+import { app, BrowserWindow, desktopCapturer, session } from "electron";
 import path from "path";
 
 let electronWindow = null;
@@ -15,6 +15,15 @@ function createWindow() {
             preload: path.join(import.meta.dirname, "preload.js")
         }
     });
+
+    // Handle screen sharing stream requests
+    session.defaultSession.setDisplayMediaRequestHandler((request, callback) => {
+        desktopCapturer.getSources({ types: ['screen', 'window'] }).then((sources) => {
+            if (sources && sources.length > 0) {
+                callback({ video: sources[0], audio: 'loopback' });
+            }
+        });
+    }, { useSystemPicker: true });
 
     electronWindow.loadURL("http://localhost:5173");
 }
