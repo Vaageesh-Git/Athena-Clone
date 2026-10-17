@@ -2,5 +2,6 @@
 const { contextBridge, ipcRenderer } = require("electron");
 
 contextBridge.exposeInMainWorld("athena", {
-    appVersion: "0.1.0"
+    getStorageDirectory: () => ipcRenderer.invoke("get-storage-directory"),
+    selectStorageDirectory: () => ipcRenderer.invoke("select-storage-directory")
 });

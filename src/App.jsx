@@ -1,15 +1,33 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import './App.css';
 
 function App() {
   const [cameraEnabled, setCameraEnabled] = useState(false);
   const [screenShareEnabled, setScreenShareEnabled] = useState(false);
   const [fullScreen, setFullScreen] = useState(false);
+  const [storagePath, setStoragePath] = useState('');
 
   const cameraVideoRef = useRef(null);
   const screenVideoRef = useRef(null);
 
   const allChecksReady = cameraEnabled && screenShareEnabled && fullScreen;
+
+  useEffect(() => {
+    if (window.athena?.getStorageDirectory) {
+      window.athena.getStorageDirectory().then((dir) => {
+        setStoragePath(dir);
+      });
+    }
+  }, []);
+
+  async function handleSelectFolder() {
+    if (window.athena?.selectStorageDirectory) {
+      const selected = await window.athena.selectStorageDirectory();
+      if (selected) {
+        setStoragePath(selected);
+      }
+    }
+  }
 
   async function getCameraAccess() {
     try {
@@ -52,10 +70,31 @@ function App() {
     <div className="page">
       <header className="page-header">
         <h1>Exam readiness check</h1>
-        <p>Camera, screen sharing, and full screen all need to be on before the exam can begin.</p>
+        <p>Configure storage and verify your camera, screen, and full screen before beginning.</p>
       </header>
 
       <div className="checklist">
+        {/* Storage directory selection */}
+        <div className="check-row">
+          <div className="check-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+            </svg>
+          </div>
+          <div className="check-body">
+            <h3>Snapshot storage directory</h3>
+            <p>Folder where camera and screen snapshots are automatically saved.</p>
+            {storagePath && <div className="storage-path">{storagePath}</div>}
+            <div className="check-action">
+              <button className="btn btn-secondary" onClick={handleSelectFolder}>
+                Choose storage folder
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div className="divider" />
+
         {/* Check 1: Camera */}
         <div className="check-row">
           <div className="check-icon">
