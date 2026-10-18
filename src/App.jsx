@@ -6,6 +6,8 @@ function App() {
   const [screenShareEnabled, setScreenShareEnabled] = useState(false);
   const [fullScreen, setFullScreen] = useState(false);
   const [storagePath, setStoragePath] = useState('');
+  const [examStarted, setExamStarted] = useState(false);
+  const [timer, setTimer] = useState(0);
 
   const cameraVideoRef = useRef(null);
   const screenVideoRef = useRef(null);
@@ -17,6 +19,13 @@ function App() {
       window.athena.getStorageDirectory().then((dir) => {
         setStoragePath(dir);
       });
+    }
+
+    if (window.athena?.registerListenerForTimerTickFromMain) {
+      const removeTimerListener = window.athena.registerListenerForTimerTickFromMain((seconds) => {
+        setTimer(seconds);
+      });
+      return () => removeTimerListener();
     }
   }, []);
 
@@ -66,6 +75,24 @@ function App() {
     }
   }
 
+  async function startExam() {
+    try {
+      if (window.athena?.startTimerOnMain) {
+        await window.athena.startTimerOnMain();
+      }
+      setExamStarted(true);
+    } catch (err) {
+      console.error("Failed to start exam timer:", err);
+    }
+  }
+
+  function formatElapsed(totalSeconds) {
+    const s = Math.max(0, Math.floor(totalSeconds || 0));
+    const mm = String(Math.floor(s / 60)).padStart(2, '0');
+    const ss = String(s % 60).padStart(2, '0');
+    return `${mm}:${ss}`;
+  }
+
   return (
     <div className="page">
       <header className="page-header">
@@ -86,7 +113,7 @@ function App() {
             <p>Folder where camera and screen snapshots are automatically saved.</p>
             {storagePath && <div className="storage-path">{storagePath}</div>}
             <div className="check-action">
-              <button className="btn btn-secondary" onClick={handleSelectFolder}>
+              <button className="btn btn-secondary" onClick={handleSelectFolder} disabled={examStarted}>
                 Choose storage folder
               </button>
             </div>
@@ -189,9 +216,16 @@ function App() {
       </div>
 
       <div className="start-area">
-        <button className="btn btn-begin" disabled={!allChecksReady}>
-          Begin exam
+        <button className="btn btn-begin" disabled={!allChecksReady || examStarted} onClick={startExam}>
+          {examStarted ? 'Exam in progress' : 'Begin exam'}
         </button>
+
+        {examStarted && (
+          <div className="elapsed" style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginTop: '10px' }}>
+            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '20px', fontWeight: 600 }}>{formatElapsed(timer)}</span>
+            <span style={{ fontSize: '13px', color: 'var(--ink-muted)' }}>elapsed</span>
+          </div>
+        )}
       </div>
     </div>
   );

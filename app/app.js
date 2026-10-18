@@ -5,6 +5,8 @@ import fs from "fs";
 
 let electronWindow = null;
 let storageDirectory = path.join(import.meta.dirname, "snapshots");
+let startTimestamp = null;
+let timerInterval = null;
 
 function ensureDirectoryStructure(baseDir) {
     const cameraDir = path.join(baseDir, "camera");
@@ -57,6 +59,18 @@ ipcMain.handle("select-storage-directory", async () => {
         return storageDirectory;
     }
     return storageDirectory;
+});
+
+ipcMain.handle("start-timer", () => {
+    startTimestamp = Date.now();
+    if (timerInterval) clearInterval(timerInterval);
+
+    timerInterval = setInterval(() => {
+        if (electronWindow && !electronWindow.isDestroyed()) {
+            const elapsed = (Date.now() - startTimestamp) / 1000;
+            electronWindow.webContents.send("timer", elapsed);
+        }
+    }, 1000);
 });
 
 app.whenReady().then(() => {
