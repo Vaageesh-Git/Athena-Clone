@@ -8,11 +8,36 @@ function App() {
   const [storagePath, setStoragePath] = useState('');
   const [examStarted, setExamStarted] = useState(false);
   const [timer, setTimer] = useState(0);
+  const [snapshotCount, setSnapshotCount] = useState(0);
 
   const cameraVideoRef = useRef(null);
   const screenVideoRef = useRef(null);
 
   const allChecksReady = cameraEnabled && screenShareEnabled && fullScreen;
+
+  async function captureCameraFrame() {
+    if (!cameraVideoRef.current || !cameraVideoRef.current.videoWidth) {
+      return;
+    }
+    try {
+      const video = cameraVideoRef.current;
+      const canvas = document.createElement("canvas");
+      canvas.width = video.videoWidth || 1280;
+      canvas.height = video.videoHeight || 720;
+      const ctx = canvas.getContext("2d");
+      ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+
+      canvas.toBlob(async (blob) => {
+        if (blob && window.athena?.storeCameraSnapImageOnDisk) {
+          const buffer = await blob.arrayBuffer();
+          await window.athena.storeCameraSnapImageOnDisk(buffer);
+          setSnapshotCount((prev) => prev + 1);
+        }
+      }, "image/jpeg", 0.85);
+    } catch (err) {
+      console.error("Camera snapshot error:", err);
+    }
+  }
 
   useEffect(() => {
     if (window.athena?.getStorageDirectory) {
@@ -21,12 +46,25 @@ function App() {
       });
     }
 
+    let removeTimerListener = () => {};
+    let removeCameraListener = () => {};
+
     if (window.athena?.registerListenerForTimerTickFromMain) {
-      const removeTimerListener = window.athena.registerListenerForTimerTickFromMain((seconds) => {
+      removeTimerListener = window.athena.registerListenerForTimerTickFromMain((seconds) => {
         setTimer(seconds);
       });
-      return () => removeTimerListener();
     }
+
+    if (window.athena?.registerListenerForCameraSnapFromMain) {
+      removeCameraListener = window.athena.registerListenerForCameraSnapFromMain(() => {
+        captureCameraFrame();
+      });
+    }
+
+    return () => {
+      removeTimerListener();
+      removeCameraListener();
+    };
   }, []);
 
   async function handleSelectFolder() {
@@ -81,8 +119,9 @@ function App() {
         await window.athena.startTimerOnMain();
       }
       setExamStarted(true);
+      captureCameraFrame();
     } catch (err) {
-      console.error("Failed to start exam timer:", err);
+      console.error("Failed to start exam session:", err);
     }
   }
 
@@ -221,9 +260,14 @@ function App() {
         </button>
 
         {examStarted && (
-          <div className="elapsed" style={{ display: 'flex', alignItems: 'baseline', gap: '8px', marginTop: '10px' }}>
-            <span style={{ fontFamily: 'var(--font-mono)', fontSize: '20px', fontWeight: 600 }}>{formatElapsed(timer)}</span>
-            <span style={{ fontSize: '13px', color: 'var(--ink-muted)' }}>elapsed</span>
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '6px', marginTop: '12px' }}>
+            <div className="elapsed" style={{ display: 'flex', alignItems: 'baseline', gap: '8px' }}>
+              <span style={{ fontFamily: 'var(--font-mono)', fontSize: '20px', fontWeight: 600 }}>{formatElapsed(timer)}</span>
+              <span style={{ fontSize: '13px', color: 'var(--ink-muted)' }}>elapsed</span>
+            </div>
+            <div style={{ fontSize: '12px', color: '#0f9d58', fontWeight: 500 }}>
+              ● Monitoring active — {snapshotCount} camera snaps captured
+            </div>
           </div>
         )}
       </div>
