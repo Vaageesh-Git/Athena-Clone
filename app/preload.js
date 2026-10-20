@@ -6,6 +6,8 @@ contextBridge.exposeInMainWorld("athena", {
     selectStorageDirectory: () => ipcRenderer.invoke("select-storage-directory"),
     startTimerOnMain: () => ipcRenderer.invoke("start-timer"),
     storeCameraSnapImageOnDisk: (data) => ipcRenderer.invoke("store-camera-snap-image-on-disk", data),
+    showRules: () => ipcRenderer.send("show-rules"),
+    takeScreenShotNow: () => ipcRenderer.invoke("take-screen-shot-now"),
     registerListenerForTimerTickFromMain: (callback) => {
         const handler = (_event, seconds) => callback(seconds);
         ipcRenderer.on("timer", handler);

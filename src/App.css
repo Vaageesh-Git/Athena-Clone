@@ -214,3 +214,49 @@ body {
 .btn-begin:hover:not(:disabled) {
   background: #0d1530;
 }
+
+/* Tools Drawer */
+.tools-panel {
+  margin-top: 32px;
+  border-top: 1px solid var(--border);
+  padding-top: 14px;
+}
+
+.tools-panel summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--ink-muted);
+  list-style: none;
+}
+
+.tools-panel summary::-webkit-details-marker {
+  display: none;
+}
+
+.tools-panel summary::before {
+  content: "▸ ";
+}
+
+.tools-panel[open] summary::before {
+  content: "▾ ";
+}
+
+.tools-actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  margin-top: 12px;
+}
+
+.btn-quiet {
+  background: transparent;
+  color: var(--ink-muted);
+  border: 1px solid var(--border);
+  font-size: 12px;
+  padding: 7px 12px;
+}
+
+.btn-quiet:hover {
+  color: var(--ink);
+  border-color: var(--ink-muted);
+}

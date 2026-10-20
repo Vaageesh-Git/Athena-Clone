@@ -271,6 +271,21 @@ function App() {
           </div>
         )}
       </div>
+
+      <details className="tools-panel">
+        <summary>Diagnostics & Exam Guidelines</summary>
+        <div className="tools-actions">
+          <button className="btn btn-quiet" onClick={() => window.athena?.showRules?.()}>
+            View Exam Rules
+          </button>
+          <button className="btn btn-quiet" onClick={() => captureCameraFrame()}>
+            Trigger Manual Camera Snap
+          </button>
+          <button className="btn btn-quiet" onClick={() => window.athena?.takeScreenShotNow?.()}>
+            Trigger Manual Screen Snap
+          </button>
+        </div>
+      </details>
     </div>
   );
 }

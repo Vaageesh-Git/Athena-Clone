@@ -1,5 +1,5 @@
 // app.js
-import { app, BrowserWindow, desktopCapturer, session, ipcMain, dialog } from "electron";
+import { app, BrowserWindow, desktopCapturer, session, ipcMain, dialog, Menu } from "electron";
 import path from "path";
 import fs from "fs";
 
@@ -19,6 +19,53 @@ function ensureDirectoryStructure(baseDir) {
     }
 }
 ensureDirectoryStructure(storageDirectory);
+
+function createApplicationMenu() {
+    const isMac = process.platform === "darwin";
+    const template = [
+        ...(isMac ? [{ label: app.name, submenu: [{ role: "about" }, { role: "quit" }] }] : []),
+        {
+            label: "File",
+            submenu: [{ label: "Exit Exam", click: () => app.quit() }]
+        },
+        {
+            label: "Edit",
+            submenu: [{ role: "copy" }, { role: "paste" }]
+        },
+        {
+            label: "View",
+            submenu: [{ role: "reload" }, { role: "togglefullscreen" }]
+        },
+        {
+            label: "Help",
+            submenu: [
+                {
+                    label: "Exam Rules & Guidelines",
+                    click: () => showRulesDialog()
+                }
+            ]
+        }
+    ];
+    Menu.setApplicationMenu(Menu.buildFromTemplate(template));
+}
+
+function showRulesDialog() {
+    if (!electronWindow) return;
+    dialog.showMessageBox(electronWindow, {
+        type: "info",
+        title: "Athena Exam Rules",
+        message: "Examination Proctoring Guidelines",
+        detail:
+            "1. Remain on the examination screen throughout the test.
+" +
+            "2. Webcam and screen sharing must remain enabled.
+" +
+            "3. Copying content and unauthorized application switching is prohibited.
+" +
+            "4. Periodic snapshots of camera and desktop will be saved for audit.",
+        buttons: ["I Understand and Agree"]
+    });
+}
 
 function createWindow() {
     electronWindow = new BrowserWindow({
@@ -41,6 +88,23 @@ function createWindow() {
     }, { useSystemPicker: true });
 
     electronWindow.loadURL("http://localhost:5173");
+
+    // Guardrail: Intercept Cmd/Ctrl + C copy attempts
+    electronWindow.webContents.on("before-input-event", (event, input) => {
+        if (input.type !== "keyDown") return;
+        const isCtrlOrCmd = input.control || input.meta;
+        const isCKey = input.key.toLowerCase() === "c";
+
+        if (isCtrlOrCmd && isCKey) {
+            event.preventDefault();
+            dialog.showMessageBox(electronWindow, {
+                type: "warning",
+                title: "Action Restricted",
+                message: "Copying is disabled during the proctored exam session.",
+                detail: "Copying questions or exam content is recorded and flagged."
+            });
+        }
+    });
 }
 
 async function takeScreenShot() {
@@ -112,7 +176,6 @@ ipcMain.handle("start-timer", () => {
         }
     }, 1000);
 
-    // Periodic snapshots every 5 seconds (camera trigger + desktop screen capture)
     snapshotInterval = setInterval(() => {
         if (electronWindow && !electronWindow.isDestroyed()) {
             electronWindow.webContents.send("camera-shot");
@@ -120,11 +183,19 @@ ipcMain.handle("start-timer", () => {
         }
     }, 5000);
 
-    // Initial snapshot
     takeScreenShot();
 });
 
+ipcMain.on("show-rules", () => {
+    showRulesDialog();
+});
+
+ipcMain.handle("take-screen-shot-now", async () => {
+    await takeScreenShot();
+});
+
 app.whenReady().then(() => {
+    createApplicationMenu();
     createWindow();
 });
 
