@@ -56,12 +56,9 @@ function showRulesDialog() {
         title: "Athena Exam Rules",
         message: "Examination Proctoring Guidelines",
         detail:
-            "1. Remain on the examination screen throughout the test.
-" +
-            "2. Webcam and screen sharing must remain enabled.
-" +
-            "3. Copying content and unauthorized application switching is prohibited.
-" +
+            "1. Remain on the examination screen throughout the test.\n" +
+            "2. Webcam and screen sharing must remain enabled.\n" +
+            "3. Copying content and unauthorized application switching is prohibited.\n" +
             "4. Periodic snapshots of camera and desktop will be saved for audit.",
         buttons: ["I Understand and Agree"]
     });
@@ -74,7 +71,7 @@ function createWindow() {
         minWidth: 800,
         minHeight: 700,
         webPreferences: {
-            devTools: true,
+            devTools: !app.isPackaged,
             preload: path.join(import.meta.dirname, "preload.js")
         }
     });
@@ -87,9 +84,12 @@ function createWindow() {
         });
     }, { useSystemPicker: true });
 
-    electronWindow.loadURL("http://localhost:5173");
+    if (app.isPackaged) {
+        electronWindow.loadFile(path.join(import.meta.dirname, "../dist/index.html"));
+    } else {
+        electronWindow.loadURL("http://localhost:5173");
+    }
 
-    // Guardrail: Intercept Cmd/Ctrl + C copy attempts
     electronWindow.webContents.on("before-input-event", (event, input) => {
         if (input.type !== "keyDown") return;
         const isCtrlOrCmd = input.control || input.meta;

@@ -1,20 +1,26 @@
 {
   "name": "athena-clone",
+  "productName": "Athena Proctoring",
   "private": true,
-  "version": "0.1.0",
+  "version": "1.0.0",
   "type": "module",
   "main": "app/app.js",
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "electron": "electron ./app/app.js"
+    "electron": "electron ./app/app.js",
+    "start": "electron ./app/app.js",
+    "package": "electron-forge package",
+    "make": "electron-forge make"
   },
   "dependencies": {
     "react": "^19.2.8",
     "react-dom": "^19.2.8"
   },
   "devDependencies": {
+    "@electron-forge/cli": "^7.11.2",
+    "@electron-forge/maker-dmg": "^7.11.2",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.7",
     "@vitejs/plugin-react": "^6.1.1",
